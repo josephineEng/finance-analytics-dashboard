@@ -1,0 +1,7 @@
+symbol,quantity,purchase_price,current_price,sector,asset_class
+AAPL,100,150.00,185.50,Technology,Equity
+MSFT,50,300.00,380.25,Technology,Equity
+JPM,75,120.00,155.75,Financial Services,Equity
+JNJ,40,160.00,158.50,Healthcare,Equity
+SPY,200,400.00,455.30,Index,Equity
+BND,150,70.00,72.45,Fixed Income,Bond
