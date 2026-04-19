@@ -6,14 +6,42 @@ from typing import Dict, Any, List
 import pandas as pd
 import numpy as np
 
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Import data loader
-from app.data_loader import get_data
+# Generate demo data directly (no external dependencies)
+def generate_demo_data():
+    """Generate demo data for serverless deployment"""
+    np.random.seed(42)  # For consistent data
+    
+    # Customer data
+    customer_data = {
+        'customer_id': range(1, 101),
+        'customer_segment': np.random.choice(['Gold', 'Silver', 'Bronze'], 100),
+        'satisfaction_score': np.random.uniform(2, 6, 100),
+        'nps_score': np.random.uniform(-10, 10, 100),
+        'customer_lifetime_value': np.random.uniform(1000, 10000, 100),
+        'churn_probability': np.random.uniform(0, 1, 100),
+        'income_bracket': np.random.choice(['Low', 'Medium', 'High'], 100),
+        'location': np.random.choice(['New York', 'Los Angeles', 'Chicago', 'Houston'], 100),
+        'gender': np.random.choice(['Male', 'Female'], 100),
+        'education_level': np.random.choice(['High School', 'Bachelor', 'Master', 'PhD'], 100),
+        'marital_status': np.random.choice(['Single', 'Married', 'Divorced'], 100),
+        'age': np.random.randint(18, 80, 100)
+    }
+    
+    # Transaction data
+    transaction_data = {
+        'customer_id': np.random.choice(range(1, 101), 500),
+        'amount': np.random.uniform(100, 10000, 500),
+        'type': np.random.choice(['Purchase', 'Transfer', 'Payment'], 500),
+        'date': pd.date_range('2023-01-01', periods=500, freq='D')
+    }
+    
+    customer_df = pd.DataFrame(customer_data)
+    transactions_df = pd.DataFrame(transaction_data)
+    
+    return customer_df, transactions_df
 
 # Load data once at startup
-customer_df, transactions_df = get_data()
+customer_df, transactions_df = generate_demo_data()
 
 @dataclass
 class APIResponse:
