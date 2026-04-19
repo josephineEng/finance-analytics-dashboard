@@ -3,60 +3,77 @@ import pandas as pd
 import json
 from datetime import datetime
 import os
+from data_loader import get_data
 
 # Get the project root directory (parent of the app directory)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(PROJECT_ROOT, 'templates')
 STATIC_DIR = os.path.join(PROJECT_ROOT, 'static')
-DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
-def load_data():
-    """Load CSV data"""
-    try:
-        customer_df = pd.read_csv(os.path.join(DATA_DIR, 'customer_data.csv'))
-        transactions_df = pd.read_csv(os.path.join(DATA_DIR, 'transactions_data.csv'))
-        return customer_df, transactions_df
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        return None, None
+# Global variables - will be loaded lazily
+customer_df = None
+transactions_df = None
 
-# Global data
-customer_df, transactions_df = load_data()
+def get_customer_data():
+    """Lazy load customer data"""
+    global customer_df
+    if customer_df is None:
+        customer_df, transactions_df = get_data()
+    return customer_df
+
+def get_transaction_data():
+    """Lazy load transaction data"""
+    global transactions_df
+    if transactions_df is None:
+        customer_df, transactions_df = get_data()
+    return transactions_df
 
 @app.route('/')
 def index():
     """Serve main dashboard"""
     return render_template('dashboard.html')
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for debugging"""
+    return jsonify({
+        'status': 'healthy',
+        'data_loaded': len(get_customer_data()) > 0,
+        'customer_count': len(get_customer_data()),
+        'transaction_count': len(get_transaction_data())
+    })
+
 @app.route('/api/dashboard-summary')
 def dashboard_summary():
     """Get dashboard summary metrics"""
-    if customer_df is None:
+    df = get_customer_data()
+    if df is None or len(df) == 0:
         return jsonify({'error': 'Data not loaded'}), 500
     
     summary = {
-        'total_customers': len(customer_df),
-        'avg_satisfaction': round(customer_df['satisfaction_score'].mean(), 2),
-        'avg_nps': round(customer_df['nps_score'].mean(), 2),
-        'avg_clv': round(customer_df['customer_lifetime_value'].mean(), 2),
-        'churn_risk_customers': len(customer_df[customer_df['churn_probability'] > 0.5]),
-        'avg_income': customer_df['income_bracket'].value_counts().to_dict() if 'income_bracket' in customer_df.columns else {}
+        'total_customers': len(df),
+        'avg_satisfaction': round(df['satisfaction_score'].mean(), 2),
+        'avg_nps': round(df['nps_score'].mean(), 2),
+        'avg_clv': round(df['customer_lifetime_value'].mean(), 2),
+        'churn_risk_customers': len(df[df['churn_probability'] > 0.5]),
+        'avg_income': df['income_bracket'].value_counts().to_dict() if 'income_bracket' in df.columns else {}
     }
     return jsonify(summary)
 
 @app.route('/api/customers')
 def get_customers():
     """Get customers with optional filtering"""
-    if customer_df is None:
+    df = get_customer_data()
+    if df is None or len(df) == 0:
         return jsonify({'error': 'Data not loaded'}), 500
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     segment = request.args.get('segment', None)
     
-    df = customer_df.copy()
+    df = df.copy()
     
     # Filter by segment if provided
     if segment and 'customer_segment' in df.columns:
@@ -77,14 +94,15 @@ def get_customers():
 @app.route('/api/analytics/segments')
 def segment_analytics():
     """Get customer segmentation analytics"""
-    if customer_df is None:
+    df = get_customer_data()
+    if df is None or len(df) == 0:
         return jsonify({'error': 'Data not loaded'}), 500
     
-    segments = customer_df['customer_segment'].value_counts().to_dict()
+    segments = df['customer_segment'].value_counts().to_dict()
     segment_stats = {}
     
-    for segment in customer_df['customer_segment'].unique():
-        segment_data = customer_df[customer_df['customer_segment'] == segment]
+    for segment in df['customer_segment'].unique():
+        segment_data = df[df['customer_segment'] == segment]
         segment_stats[segment] = {
             'count': len(segment_data),
             'avg_satisfaction': round(segment_data['satisfaction_score'].mean(), 2),
@@ -126,58 +144,65 @@ def nps_analytics():
     
     nps_bins = [-100, -1, 0, 6, 8, 10]
     nps_labels = ['Detractors (<0)', 'Passive (0-6)', 'Promoters (7-10)']
-    nps_dist = pd.cut(customer_df['nps_score'], bins=nps_bins, labels=['Detractors', 'Passive', 'Promoters']).value_counts().to_dict()
+    df = get_customer_data()
+    if df is None or len(df) == 0:
+        return jsonify({'error': 'Data not loaded'}), 500
+    
+    nps_dist = pd.cut(df['nps_score'], bins=nps_bins, labels=['Detractors', 'Passive', 'Promoters']).value_counts().to_dict()
     
     return jsonify(nps_dist)
 
 @app.route('/api/analytics/churn')
 def churn_analytics():
     """Get churn risk analytics"""
-    if customer_df is None:
+    df = get_customer_data()
+    if df is None or len(df) == 0:
         return jsonify({'error': 'Data not loaded'}), 500
     
-    high_risk = len(customer_df[customer_df['churn_probability'] > 0.7])
-    medium_risk = len(customer_df[(customer_df['churn_probability'] > 0.4) & (customer_df['churn_probability'] <= 0.7)])
-    low_risk = len(customer_df[customer_df['churn_probability'] <= 0.4])
+    high_risk = len(df[df['churn_probability'] > 0.7])
+    medium_risk = len(df[(df['churn_probability'] > 0.4) & (df['churn_probability'] <= 0.7)])
+    low_risk = len(df[df['churn_probability'] <= 0.4])
     
     return jsonify({
         'high_risk': high_risk,
         'medium_risk': medium_risk,
         'low_risk': low_risk,
-        'total': len(customer_df)
+        'total': len(df)
     })
 
 @app.route('/api/analytics/demographics')
 def demographics_analytics():
     """Get demographic analytics"""
-    if customer_df is None:
+    df = get_customer_data()
+    if df is None or len(df) == 0:
         return jsonify({'error': 'Data not loaded'}), 500
     
     return jsonify({
-        'gender': customer_df['gender'].value_counts().to_dict(),
-        'education': customer_df['education_level'].value_counts().to_dict(),
-        'marital_status': customer_df['marital_status'].value_counts().to_dict(),
+        'gender': df['gender'].value_counts().to_dict(),
+        'education': df['education_level'].value_counts().to_dict(),
+        'marital_status': df['marital_status'].value_counts().to_dict(),
         'age_stats': {
-            'mean': round(customer_df['age'].mean(), 2),
-            'median': float(customer_df['age'].median()),
-            'min': int(customer_df['age'].min()),
-            'max': int(customer_df['age'].max())
+            'mean': round(df['age'].mean(), 2),
+            'median': float(df['age'].median()),
+            'min': int(df['age'].min()),
+            'max': int(df['age'].max())
         }
     })
 
 @app.route('/api/analytics/transactions-summary')
 def transactions_summary():
     """Get transaction summary metrics"""
-    if transactions_df is None:
+    df = get_transaction_data()
+    if df is None or len(df) == 0:
         return jsonify({'error': 'Data not loaded'}), 500
     
     try:
         summary = {
-            'total_transactions': len(transactions_df),
-            'total_volume': float(transactions_df['amount'].sum()) if 'amount' in transactions_df.columns else 0,
-            'avg_transaction': float(transactions_df['amount'].mean()) if 'amount' in transactions_df.columns else 0,
-            'max_transaction': float(transactions_df['amount'].max()) if 'amount' in transactions_df.columns else 0,
-            'min_transaction': float(transactions_df['amount'].min()) if 'amount' in transactions_df.columns else 0,
+            'total_transactions': len(df),
+            'total_volume': float(df['amount'].sum()) if 'amount' in df.columns else 0,
+            'avg_transaction': float(df['amount'].mean()) if 'amount' in df.columns else 0,
+            'max_transaction': float(df['amount'].max()) if 'amount' in df.columns else 0,
+            'min_transaction': float(df['amount'].min()) if 'amount' in df.columns else 0,
         }
         return jsonify(summary)
     except Exception as e:
