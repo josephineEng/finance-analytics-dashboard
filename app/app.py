@@ -40,9 +40,7 @@ def health_check():
     """Health check endpoint for debugging"""
     return jsonify({
         'status': 'healthy',
-        'data_loaded': len(get_customer_data()) > 0,
-        'customer_count': len(get_customer_data()),
-        'transaction_count': len(get_transaction_data())
+        'message': 'App is running'
     })
 
 @app.route('/api/dashboard-summary')

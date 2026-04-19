@@ -7,15 +7,9 @@ DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 
 def load_sample_data():
     """Load a smaller sample of data for faster deployment"""
-    try:
-        # Load only first 1000 rows for faster startup
-        customer_df = pd.read_csv(os.path.join(DATA_DIR, 'customer_data.csv'), nrows=1000)
-        transactions_df = pd.read_csv(os.path.join(DATA_DIR, 'transactions_data.csv'), nrows=1000)
-        print(f"Sample data loaded: {len(customer_df)} customers, {len(transactions_df)} transactions")
-        return customer_df, transactions_df
-    except Exception as e:
-        print(f"Error loading sample data: {e}")
-        return create_fallback_data()
+    # For Render deployment, use fallback data directly to avoid file loading issues
+    print("Using fallback demo data for Render deployment")
+    return create_fallback_data()
 
 def create_fallback_data():
     """Create minimal fallback data for demo purposes"""
