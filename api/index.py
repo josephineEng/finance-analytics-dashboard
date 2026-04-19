@@ -91,5 +91,54 @@ def health_check():
     })
 
 # Vercel serverless function handler
-def handler(event, context):
-    return app(event, context)
+def handler(event):
+    # Handle Vercel's event format
+    try:
+        # Extract method, path, and headers from Vercel event
+        method = event.get('method', 'GET')
+        path = event.get('path', '/')
+        headers = event.get('headers', {})
+        body = event.get('body', '')
+        
+        # Create a WSGI environ dict
+        environ = {
+            'REQUEST_METHOD': method,
+            'PATH_INFO': path,
+            'SERVER_NAME': 'vercel.app',
+            'SERVER_PORT': '443',
+            'wsgi.url_scheme': 'https',
+            'wsgi.input': type('MockInput', (), {'read': lambda self, n: body.encode()})(),
+            'wsgi.errors': None,
+            'wsgi.version': (1, 0),
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': False,
+        }
+        
+        # Add headers to environ
+        for key, value in headers.items():
+            environ[f'HTTP_{key.upper().replace("-", "_")}'] = value
+        
+        # Call the Flask app
+        response = {}
+        
+        def start_response(status, response_headers):
+            response['status'] = status
+            response['headers'] = response_headers
+        
+        # Get the response from Flask
+        app_iter = app(environ, start_response)
+        response_body = b''.join(app_iter) if app_iter else b''
+        
+        return {
+            'statusCode': int(response['status'].split()[0]),
+            'headers': dict(response['headers']),
+            'body': response_body.decode('utf-8')
+        }
+        
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
