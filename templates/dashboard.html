@@ -1,0 +1,1643 @@
+<!doctype html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Precision Analytics - Finance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#005312",
+              "primary-fixed-dim": "#a8c8ff",
+              "inverse-surface": "#2e3132",
+              "on-primary-fixed-variant": "#00468b",
+              "error-container": "#ffdad6",
+              "outline-variant": "#c2c6d4",
+              secondary: "#48626e",
+              tertiary: "#005412",
+              "on-secondary": "#ffffff",
+              primary: "#00488d",
+              "on-secondary-fixed-variant": "#304a55",
+              "tertiary-fixed-dim": "#88d982",
+              "inverse-primary": "#a8c8ff",
+              "on-primary-container": "#cadcff",
+              "tertiary-container": "#1d6e25",
+              "on-background": "#191c1d",
+              "on-surface-variant": "#424752",
+              "secondary-container": "#cbe7f5",
+              "secondary-fixed": "#cbe7f5",
+              "on-primary-fixed": "#001b3d",
+              "surface-dim": "#d8dadb",
+              "on-primary": "#ffffff",
+              surface: "#f8fafb",
+              "surface-container-high": "#e6e8e9",
+              "surface-bright": "#f8fafb",
+              "primary-container": "#005fb8",
+              "primary-fixed": "#d6e3ff",
+              "on-error": "#ffffff",
+              "on-surface": "#191c1d",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e1e3e4",
+              background: "#f8fafb",
+              "surface-tint": "#005db5",
+              "surface-container-lowest": "#ffffff",
+              "inverse-on-surface": "#eff1f2",
+              error: "#ba1a1a",
+              "on-error-container": "#93000a",
+              "secondary-fixed-dim": "#afcbd8",
+              "surface-container-low": "#f2f4f5",
+              "tertiary-fixed": "#a3f69c",
+              "surface-container": "#eceeef",
+              "on-secondary-container": "#4e6874",
+              outline: "#727783",
+              "on-tertiary-fixed": "#002204",
+              "on-tertiary-container": "#9bee94",
+              "on-secondary-fixed": "#021f29",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            fontFamily: {
+              headline: ["Inter"],
+              body: ["Inter"],
+              label: ["Inter"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .nav-link {
+        transition: all 0.2s ease;
+      }
+      .nav-link.active {
+        color: #005fb8;
+        font-weight: bold;
+        background-color: rgba(0, 95, 184, 0.1);
+      }
+      .nav-link.active::after {
+        content: "";
+        position: absolute;
+        right: 1rem;
+        width: 0.375rem;
+        height: 0.375rem;
+        background-color: #005fb8;
+        border-radius: 50%;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+      }
+
+      .hover-lift {
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      }
+
+      .number-animation {
+        animation: countUp 1s ease-out;
+      }
+
+      @keyframes countUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .loading {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #005fb8;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-surface text-on-surface flex min-h-screen">
+    <!-- Sidebar -->
+    <aside
+      class="h-screen w-72 fixed left-0 top-0 border-r-0 bg-[#f2f4f5] dark:bg-slate-900 flex flex-col py-8 px-6 gap-y-2 z-50"
+    >
+      <div class="mb-10 px-2 flex items-center gap-3">
+        <div
+          class="w-8 h-8 bg-primary rounded-sm flex items-center justify-center text-on-primary"
+        >
+          <span
+            class="material-symbols-outlined text-[20px]"
+            style="font-variation-settings: &quot;FILL&quot; 1"
+            >analytics</span
+          >
+        </div>
+        <div>
+          <h1
+            class="text-lg font-black tracking-tighter text-slate-900 dark:text-slate-50"
+          >
+            Precision Analytics
+          </h1>
+          <p
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold text-slate-500"
+          >
+            Finance Dashboard
+          </p>
+        </div>
+      </div>
+      <nav class="flex flex-col gap-y-1">
+        <a
+          class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-all scale-100 active:scale-[0.98] duration-200 relative active"
+          href="#"
+          data-tab="executive-summary"
+        >
+          <span class="material-symbols-outlined" data-icon="dashboard"
+            >dashboard</span
+          >
+          <span
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold"
+            >Executive Summary</span
+          >
+        </a>
+        <a
+          class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-all scale-100 active:scale-[0.98] duration-200 relative"
+          href="#"
+          data-tab="customer-analysis"
+        >
+          <span class="material-symbols-outlined" data-icon="groups"
+            >groups</span
+          >
+          <span
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold"
+            >Customer Analysis</span
+          >
+        </a>
+        <a
+          class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-all scale-100 active:scale-[0.98] duration-200 relative"
+          href="#"
+          data-tab="churn-risk"
+        >
+          <span class="material-symbols-outlined" data-icon="warning"
+            >warning</span
+          >
+          <span
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold"
+            >Churn Risk</span
+          >
+        </a>
+        <a
+          class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-all scale-100 active:scale-[0.98] duration-200 relative"
+          href="#"
+          data-tab="demographics"
+        >
+          <span class="material-symbols-outlined" data-icon="person"
+            >person</span
+          >
+          <span
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold"
+            >Demographics</span
+          >
+        </a>
+        <a
+          class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-all scale-100 active:scale-[0.98] duration-200 relative"
+          href="#"
+          data-tab="transactions"
+        >
+          <span class="material-symbols-outlined" data-icon="payments"
+            >payments</span
+          >
+          <span
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold"
+            >Transactions</span
+          >
+        </a>
+        <a
+          class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 dark:text-slate-400 font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-all scale-100 active:scale-[0.98] duration-200 relative"
+          href="#"
+          data-tab="insights"
+        >
+          <span class="material-symbols-outlined" data-icon="lightbulb"
+            >lightbulb</span
+          >
+          <span
+            class="font-['Inter'] tracking-tight uppercase text-[10px] font-bold"
+            >Insights</span
+          >
+        </a>
+      </nav>
+      <div class="mt-auto pt-8 border-t border-slate-200/50">
+        <div class="flex items-center gap-3 px-2">
+          <div
+            class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-on-primary font-bold"
+          >
+            PA
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-on-surface">Analytics</span>
+            <span
+              class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider"
+              >Dashboard</span
+            >
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-72">
+      <!-- Header -->
+      <header
+        class="sticky top-0 z-50 w-full bg-[#f8fafb]/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-10 py-6"
+      >
+        <div class="flex items-center gap-8 flex-1">
+          <h2
+            id="page-title"
+            class="font-['Inter'] font-semibold tracking-tight text-slate-900 dark:text-slate-50 text-xl"
+          >
+            Executive Summary
+          </h2>
+        </div>
+        <div class="flex items-center gap-4">
+          <button
+            class="bg-gradient-to-b from-primary-container to-primary text-on-primary px-5 py-2.5 rounded-sm text-sm font-semibold tracking-tight shadow-sm active:scale-95 transition-transform"
+            onclick="location.reload()"
+          >
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <!-- Tab Content -->
+      <div class="px-10 py-8 max-w-7xl mx-auto">
+        <!-- Executive Summary Tab -->
+        <div id="executive-summary" class="tab-content active">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+            <!-- Total Customers -->
+            <div
+              class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift"
+            >
+              <div
+                class="absolute top-4 right-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-primary text-xl"
+                  >groups</span
+                >
+              </div>
+              <p
+                class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4"
+              >
+                Total Customers
+              </p>
+              <h3
+                class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation"
+                id="total-customers"
+              >
+                0
+              </h3>
+              <div class="mt-4 text-[10px] text-outline">Loading data...</div>
+            </div>
+
+            <!-- Avg Satisfaction -->
+            <div
+              class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift"
+            >
+              <div
+                class="absolute top-4 right-4 w-12 h-12 bg-tertiary/10 rounded-full flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-tertiary text-xl"
+                  >sentiment_satisfied</span
+                >
+              </div>
+              <p
+                class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4"
+              >
+                Avg Satisfaction
+              </p>
+              <h3
+                class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation"
+                id="avg-satisfaction"
+              >
+                0
+              </h3>
+              <div class="mt-4 text-[10px] text-outline">Out of 10</div>
+            </div>
+
+            <!-- Avg NPS -->
+            <div
+              class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift"
+            >
+              <div
+                class="absolute top-4 right-4 w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-secondary text-xl"
+                  >trending_up</span
+                >
+              </div>
+              <p
+                class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4"
+              >
+                Avg NPS Score
+              </p>
+              <h3
+                class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation"
+                id="avg-nps"
+              >
+                0
+              </h3>
+              <div class="mt-4 text-[10px] text-outline">Customer loyalty</div>
+            </div>
+
+            <!-- Churn Risk -->
+            <div
+              class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift"
+            >
+              <div
+                class="absolute top-4 right-4 w-12 h-12 bg-error/10 rounded-full flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-error text-xl"
+                  >warning</span
+                >
+              </div>
+              <p
+                class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4"
+              >
+                High Risk Churn
+              </p>
+              <h3
+                class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation"
+                id="churn-risk"
+              >
+                0
+              </h3>
+              <div class="mt-4 text-[10px] text-outline">
+                Customers with >70% risk
+              </div>
+            </div>
+
+            <!-- Avg CLV -->
+            <div
+              class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift"
+            >
+              <div
+                class="absolute top-4 right-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-primary text-xl"
+                  >account_balance_wallet</span
+                >
+              </div>
+              <p
+                class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4"
+              >
+                Avg Customer CLV
+              </p>
+              <h3
+                class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation"
+                id="avg-clv"
+              >
+                $0
+              </h3>
+              <div class="mt-4 text-[10px] text-outline">
+                Customer lifetime value
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Segments Chart -->
+            <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+              <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+                Customer Segments
+              </h4>
+              <div class="chart-container">
+                <canvas id="segmentsChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Churn Risk Distribution -->
+            <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+              <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+                Churn Risk Distribution
+              </h4>
+              <div class="chart-container">
+                <canvas id="churnChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Locations and Income -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Top Locations -->
+            <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+              <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+                Top Locations
+              </h4>
+              <div id="locations-list" class="space-y-3">
+                <div
+                  class="h-4 bg-surface-container-high rounded animate-pulse"
+                ></div>
+                <div
+                  class="h-4 bg-surface-container-high rounded animate-pulse"
+                ></div>
+                <div
+                  class="h-4 bg-surface-container-high rounded animate-pulse"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Income Distribution -->
+            <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+              <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+                Income Distribution
+              </h4>
+              <div id="income-list" class="space-y-3">
+                <div
+                  class="h-4 bg-surface-container-high rounded animate-pulse"
+                ></div>
+                <div
+                  class="h-4 bg-surface-container-high rounded animate-pulse"
+                ></div>
+                <div
+                  class="h-4 bg-surface-container-high rounded animate-pulse"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Analysis Tab -->
+        <div id="customer-analysis" class="tab-content">
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+              Customer Demographics
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div class="p-4 bg-surface-container-high rounded-lg">
+                <p class="text-sm text-on-surface-variant mb-2">Average Age</p>
+                <h3 class="text-2xl font-bold" id="avg-age">--</h3>
+              </div>
+              <div class="p-4 bg-surface-container-high rounded-lg">
+                <p class="text-sm text-on-surface-variant mb-2">Age Range</p>
+                <h3 class="text-2xl font-bold" id="age-range">--</h3>
+              </div>
+              <div class="p-4 bg-surface-container-high rounded-lg">
+                <p class="text-sm text-on-surface-variant mb-2">
+                  Most Common Gender
+                </p>
+                <h3 class="text-2xl font-bold" id="common-gender">--</h3>
+              </div>
+              <div class="p-4 bg-surface-container-high rounded-lg">
+                <p class="text-sm text-on-surface-variant mb-2">
+                  Most Common Status
+                </p>
+                <h3 class="text-2xl font-bold" id="common-status">--</h3>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h5 class="font-bold mb-4">Gender Distribution</h5>
+                <canvas id="genderChart"></canvas>
+              </div>
+              <div>
+                <h5 class="font-bold mb-4">Education Level</h5>
+                <canvas id="educationChart"></canvas>
+              </div>
+              <div>
+                <h5 class="font-bold mb-4">Marital Status</h5>
+                <canvas id="maritalChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Churn Risk Tab -->
+        <div id="churn-risk" class="tab-content">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="w-10 h-10 bg-error/10 rounded-full flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-error"
+                    >priority_high</span
+                  >
+                </div>
+                <h5 class="text-sm font-bold text-on-surface">High Risk</h5>
+              </div>
+              <h3 class="text-2xl font-bold" id="high-risk">0</h3>
+              <p class="text-xs text-on-surface-variant mt-2">
+                Churn probability > 70%
+              </p>
+            </div>
+
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-secondary"
+                    >warning</span
+                  >
+                </div>
+                <h5 class="text-sm font-bold text-on-surface">Medium Risk</h5>
+              </div>
+              <h3 class="text-2xl font-bold" id="medium-risk">0</h3>
+              <p class="text-xs text-on-surface-variant mt-2">
+                Churn probability 40-70%
+              </p>
+            </div>
+
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="w-10 h-10 bg-tertiary/10 rounded-full flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-tertiary"
+                    >check_circle</span
+                  >
+                </div>
+                <h5 class="text-sm font-bold text-on-surface">Low Risk</h5>
+              </div>
+              <h3 class="text-2xl font-bold" id="low-risk">0</h3>
+              <p class="text-xs text-on-surface-variant mt-2">
+                Churn probability < 40%
+              </p>
+            </div>
+
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-primary"
+                    >groups</span
+                  >
+                </div>
+                <h5 class="text-sm font-bold text-on-surface">Total</h5>
+              </div>
+              <h3 class="text-2xl font-bold" id="total-churn">0</h3>
+              <p class="text-xs text-on-surface-variant mt-2">All customers</p>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+              Churn Risk by Segment
+            </h4>
+            <div class="chart-container">
+              <canvas id="churnBySegmentChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demographics Tab -->
+        <div id="demographics" class="tab-content">
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">
+              Demographic Breakdown
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h5 class="font-bold mb-4">Gender Distribution</h5>
+                <canvas id="demGenderChart"></canvas>
+              </div>
+              <div>
+                <h5 class="font-bold mb-4">Education Distribution</h5>
+                <canvas id="demEducationChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div id="transactions" class="tab-content">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+            <!-- Total Transactions -->
+            <div class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift">
+              <div class="absolute top-4 right-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
+              </div>
+              <p class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4">Total Transactions</p>
+              <h3 class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation" id="total-txns">0</h3>
+              <div class="mt-4 text-[10px] text-outline">Completed transactions</div>
+            </div>
+            
+            <!-- Total Volume -->
+            <div class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift">
+              <div class="absolute top-4 right-4 w-12 h-12 bg-tertiary/10 rounded-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary text-xl">trending_up</span>
+              </div>
+              <p class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4">Total Volume</p>
+              <h3 class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation" id="total-volume">$0</h3>
+              <div class="mt-4 text-[10px] text-outline">Transaction sum</div>
+            </div>
+            
+            <!-- Avg Transaction -->
+            <div class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift">
+              <div class="absolute top-4 right-4 w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-secondary text-xl">calculate</span>
+              </div>
+              <p class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4">Avg Transaction</p>
+              <h3 class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation" id="avg-txn">$0</h3>
+              <div class="mt-4 text-[10px] text-outline">Average amount</div>
+            </div>
+            
+            <!-- Max Transaction -->
+            <div class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift">
+              <div class="absolute top-4 right-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-xl">arrow_upward</span>
+              </div>
+              <p class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4">Max Transaction</p>
+              <h3 class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation" id="max-txn">$0</h3>
+              <div class="mt-4 text-[10px] text-outline">Highest amount</div>
+            </div>
+            
+            <!-- Min Transaction -->
+            <div class="bg-surface-container-lowest p-6 rounded-lg relative overflow-hidden group hover-lift">
+              <div class="absolute top-4 right-4 w-12 h-12 bg-error/10 rounded-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-error text-xl">arrow_downward</span>
+              </div>
+              <p class="label-sm uppercase tracking-[0.05em] text-on-surface-variant text-[10px] font-bold mb-4">Min Transaction</p>
+              <h3 class="headline-md text-3xl font-bold tracking-tight text-on-surface number-animation" id="min-txn">$0</h3>
+              <div class="mt-4 text-[10px] text-outline">Lowest amount</div>
+            </div>
+          </div>
+
+          <!-- Transaction Type Summary -->
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift mb-8">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">Transaction Type Summary</h4>
+            <div id="txn-type-summary" class="space-y-4">
+              <div class="animate-pulse space-y-3">
+                <div class="h-16 bg-surface-container-high rounded"></div>
+                <div class="h-16 bg-surface-container-high rounded"></div>
+                <div class="h-16 bg-surface-container-high rounded"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Charts -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Transaction Types -->
+            <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+              <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">Transaction Types</h4>
+              <div class="chart-container">
+                <canvas id="txnTypesChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Amount Distribution -->
+            <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+              <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">Amount Distribution</h4>
+              <div class="chart-container">
+                <canvas id="amountDistChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Trend -->
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">Monthly Transaction Trend</h4>
+            <div class="chart-container">
+              <canvas id="monthlyTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insights Tab -->
+        <div id="insights" class="tab-content">
+          <!-- Satisfaction vs Transactions -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <h5 class="font-bold text-on-surface mb-4">High Satisfaction</h5>
+              <p class="text-xs text-on-surface-variant mb-2">Score ≥ 8</p>
+              <div class="text-2xl font-bold text-primary mb-2" id="high-sat-count">0</div>
+              <div class="text-xs text-on-surface-variant">Avg Volume: <span id="high-sat-volume" class="font-bold text-on-surface">$0</span></div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <h5 class="font-bold text-on-surface mb-4">Medium Satisfaction</h5>
+              <p class="text-xs text-on-surface-variant mb-2">Score 5-7</p>
+              <div class="text-2xl font-bold text-secondary mb-2" id="med-sat-count">0</div>
+              <div class="text-xs text-on-surface-variant">Avg Volume: <span id="med-sat-volume" class="font-bold text-on-surface">$0</span></div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <h5 class="font-bold text-on-surface mb-4">Low Satisfaction</h5>
+              <p class="text-xs text-on-surface-variant mb-2">Score < 5</p>
+              <div class="text-2xl font-bold text-error mb-2" id="low-sat-count">0</div>
+              <div class="text-xs text-on-surface-variant">Avg Volume: <span id="low-sat-volume" class="font-bold text-on-surface">$0</span></div>
+            </div>
+          </div>
+
+          <!-- Transaction Volume by Segment -->
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift mb-8">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">Transaction Behavior by Customer Segment</h4>
+            <div id="segment-analysis" class="space-y-4">
+              <div class="animate-pulse h-20 bg-surface-container-high rounded"></div>
+              <div class="animate-pulse h-20 bg-surface-container-high rounded"></div>
+              <div class="animate-pulse h-20 bg-surface-container-high rounded"></div>
+            </div>
+          </div>
+
+          <!-- CLV vs Transaction Volume -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <h5 class="font-bold text-on-surface mb-4">Platinum CLV</h5>
+              <p class="text-xs text-on-surface-variant mb-2">High Value Customers</p>
+              <div class="text-2xl font-bold text-primary mb-2" id="platinum-count">0</div>
+              <div class="text-xs text-on-surface-variant">
+                Avg Txns: <span id="platinum-txns" class="font-bold text-on-surface">0</span><br>
+                Avg Volume: <span id="platinum-volume" class="font-bold text-on-surface">$0</span>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <h5 class="font-bold text-on-surface mb-4">Gold CLV</h5>
+              <p class="text-xs text-on-surface-variant mb-2">Medium Value Customers</p>
+              <div class="text-2xl font-bold text-secondary mb-2" id="gold-count">0</div>
+              <div class="text-xs text-on-surface-variant">
+                Avg Txns: <span id="gold-txns" class="font-bold text-on-surface">0</span><br>
+                Avg Volume: <span id="gold-volume" class="font-bold text-on-surface">$0</span>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-lg hover-lift">
+              <h5 class="font-bold text-on-surface mb-4">Bronze CLV</h5>
+              <p class="text-xs text-on-surface-variant mb-2">Lower Value Customers</p>
+              <div class="text-2xl font-bold text-tertiary mb-2" id="bronze-count">0</div>
+              <div class="text-xs text-on-surface-variant">
+                Avg Txns: <span id="bronze-txns" class="font-bold text-on-surface">0</span><br>
+                Avg Volume: <span id="bronze-volume" class="font-bold text-on-surface">$0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Customers -->
+          <div class="bg-surface-container-lowest p-8 rounded-lg hover-lift">
+            <h4 class="text-lg font-bold tracking-tight text-on-surface mb-6">Top Customers by Transaction Volume</h4>
+            <div id="top-customers" class="space-y-3">
+              <div class="animate-pulse h-16 bg-surface-container-high rounded"></div>
+              <div class="animate-pulse h-16 bg-surface-container-high rounded"></div>
+              <div class="animate-pulse h-16 bg-surface-container-high rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Chart.js color scheme
+      const primaryColor = "#00488d";
+      const tertiaryColor = "#005412";
+      const secondaryColor = "#48626e";
+      const errorColor = "#ba1a1a";
+
+      // Initialize charts
+      let segmentsChart,
+        churnChart,
+        churnBySegmentChart,
+        genderChart,
+        educationChart,
+        maritalChart,
+        demGenderChart,
+        demEducationChart,
+        txnTypesChart,
+        amountDistChart,
+        monthlyTrendChart;
+
+      // Tab navigation
+      document.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const tab = link.getAttribute("data-tab");
+
+          // Update active nav
+          document
+            .querySelectorAll(".nav-link")
+            .forEach((l) => l.classList.remove("active"));
+          link.classList.add("active");
+
+          // Update active tab
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((t) => t.classList.remove("active"));
+          document.getElementById(tab).classList.add("active");
+
+          // Update page title
+          const title = link.querySelector("span:last-child").textContent;
+          document.getElementById("page-title").textContent = title;
+        });
+      });
+
+      // Load dashboard data
+      async function loadDashboard() {
+        try {
+          const summaryRes = await fetch("/api/dashboard-summary");
+          const summary = await summaryRes.json();
+
+          document.getElementById("total-customers").textContent =
+            summary.total_customers.toLocaleString();
+          document.getElementById("avg-satisfaction").textContent =
+            summary.avg_satisfaction;
+          document.getElementById("avg-nps").textContent = summary.avg_nps;
+          document.getElementById("churn-risk").textContent =
+            summary.churn_risk_customers;
+          document.getElementById("avg-clv").textContent =
+            "$" + (summary.avg_clv / 1000000).toFixed(1) + "M";
+
+          // Load segment analytics
+          loadSegmentAnalytics();
+
+          // Load churn analytics
+          loadChurnAnalytics();
+
+          // Load demographics
+          loadDemographics();
+
+          // Load locations
+          loadLocations();
+
+          // Load income
+          loadIncome();
+
+          // Load transactions
+          loadTransactions();
+
+          // Load insights
+          loadInsights();
+        } catch (error) {
+          console.error("Error loading dashboard:", error);
+        }
+      }
+
+      async function loadSegmentAnalytics() {
+        try {
+          const res = await fetch("/api/analytics/segments");
+          const segments = await res.json();
+
+          const labels = Object.keys(segments);
+          const counts = labels.map((label) => segments[label].count);
+
+          const ctx = document.getElementById("segmentsChart").getContext("2d");
+          if (segmentsChart) segmentsChart.destroy();
+
+          segmentsChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  data: counts,
+                  backgroundColor: [
+                    primaryColor,
+                    tertiaryColor,
+                    secondaryColor,
+                    errorColor,
+                  ],
+                  borderColor: "#ffffff",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { position: "bottom" },
+              },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading segments:", error);
+        }
+      }
+
+      async function loadChurnAnalytics() {
+        try {
+          const res = await fetch("/api/analytics/churn");
+          const data = await res.json();
+
+          document.getElementById("high-risk").textContent = data.high_risk;
+          document.getElementById("medium-risk").textContent = data.medium_risk;
+          document.getElementById("low-risk").textContent = data.low_risk;
+          document.getElementById("total-churn").textContent = data.total;
+
+          const ctx = document.getElementById("churnChart").getContext("2d");
+          if (churnChart) churnChart.destroy();
+
+          churnChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["High Risk", "Medium Risk", "Low Risk"],
+              datasets: [
+                {
+                  label: "Number of Customers",
+                  data: [data.high_risk, data.medium_risk, data.low_risk],
+                  backgroundColor: [errorColor, secondaryColor, tertiaryColor],
+                  borderRadius: 4,
+                },
+              ],
+            },
+            options: {
+              indexAxis: "x",
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: { legend: { display: false } },
+            },
+          });
+
+          // Load churn by segment
+          loadChurnBySegment();
+        } catch (error) {
+          console.error("Error loading churn:", error);
+        }
+      }
+
+      async function loadChurnBySegment() {
+        try {
+          const res = await fetch("/api/analytics/segments");
+          const segments = await res.json();
+
+          const labels = Object.keys(segments);
+          const avgChurn = labels.map((label) => {
+            return (
+              (segments[label].churn_risk / segments[label].count) *
+              100
+            ).toFixed(1);
+          });
+
+          const ctx = document
+            .getElementById("churnBySegmentChart")
+            .getContext("2d");
+          if (churnBySegmentChart) churnBySegmentChart.destroy();
+
+          churnBySegmentChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Avg Customers with High Churn Risk (%)",
+                  data: avgChurn,
+                  backgroundColor: primaryColor,
+                  borderRadius: 4,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: { legend: { display: true } },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading churn by segment:", error);
+        }
+      }
+
+      async function loadDemographics() {
+        try {
+          const res = await fetch("/api/analytics/demographics");
+          const data = await res.json();
+
+          // Age stats
+          document.getElementById("avg-age").textContent = Math.round(
+            data.age_stats.mean,
+          );
+          document.getElementById("age-range").textContent =
+            `${data.age_stats.min}-${data.age_stats.max}`;
+
+          // Most common
+          const genderData = Object.entries(data.gender).sort(
+            (a, b) => b[1] - a[1],
+          );
+          const maritalData = Object.entries(data.marital_status).sort(
+            (a, b) => b[1] - a[1],
+          );
+
+          if (genderData.length > 0)
+            document.getElementById("common-gender").textContent =
+              genderData[0][0];
+          if (maritalData.length > 0)
+            document.getElementById("common-status").textContent =
+              maritalData[0][0];
+
+          // Gender Chart
+          let ctx = document.getElementById("genderChart").getContext("2d");
+          if (genderChart) genderChart.destroy();
+          genderChart = new Chart(ctx, {
+            type: "pie",
+            data: {
+              labels: Object.keys(data.gender),
+              datasets: [
+                {
+                  data: Object.values(data.gender),
+                  backgroundColor: [primaryColor, tertiaryColor],
+                  borderColor: "#ffffff",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { position: "bottom" } },
+            },
+          });
+
+          // Education Chart
+          ctx = document.getElementById("educationChart").getContext("2d");
+          if (educationChart) educationChart.destroy();
+          educationChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: Object.keys(data.education),
+              datasets: [
+                {
+                  data: Object.values(data.education),
+                  backgroundColor: [
+                    primaryColor,
+                    tertiaryColor,
+                    secondaryColor,
+                    errorColor,
+                  ],
+                  borderColor: "#ffffff",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { position: "bottom" } },
+            },
+          });
+
+          // Marital Chart
+          ctx = document.getElementById("maritalChart").getContext("2d");
+          if (maritalChart) maritalChart.destroy();
+          maritalChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: Object.keys(data.marital_status),
+              datasets: [
+                {
+                  label: "Count",
+                  data: Object.values(data.marital_status),
+                  backgroundColor: primaryColor,
+                  borderRadius: 4,
+                },
+              ],
+            },
+            options: {
+              indexAxis: "x",
+              responsive: true,
+              plugins: { legend: { display: false } },
+            },
+          });
+
+          // Demographics page charts
+          ctx = document.getElementById("demGenderChart").getContext("2d");
+          if (demGenderChart) demGenderChart.destroy();
+          demGenderChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: Object.keys(data.gender),
+              datasets: [
+                {
+                  data: Object.values(data.gender),
+                  backgroundColor: [primaryColor, tertiaryColor],
+                  borderColor: "#ffffff",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { position: "bottom" } },
+            },
+          });
+
+          ctx = document.getElementById("demEducationChart").getContext("2d");
+          if (demEducationChart) demEducationChart.destroy();
+          demEducationChart = new Chart(ctx, {
+            type: "polarArea",
+            data: {
+              labels: Object.keys(data.education),
+              datasets: [
+                {
+                  data: Object.values(data.education),
+                  backgroundColor: [
+                    primaryColor,
+                    tertiaryColor,
+                    secondaryColor,
+                    errorColor,
+                    "#667eea",
+                  ],
+                  borderColor: "#ffffff",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { position: "bottom" } },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading demographics:", error);
+        }
+      }
+
+      async function loadLocations() {
+        try {
+          const res = await fetch("/api/analytics/locations");
+          const locations = await res.json();
+
+          let html = "";
+          Object.entries(locations)
+            .slice(0, 5)
+            .forEach(([location, count], idx) => {
+              const percent = (
+                (count / Object.values(locations).reduce((a, b) => a + b)) *
+                100
+              ).toFixed(1);
+              html += `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">${idx + 1}. ${location}</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: ${percent}%"></div>
+                                </div>
+                                <span class="text-sm font-bold">${count}</span>
+                            </div>
+                        </div>
+                    `;
+            });
+          document.getElementById("locations-list").innerHTML = html;
+        } catch (error) {
+          console.error("Error loading locations:", error);
+        }
+      }
+
+      async function loadIncome() {
+        try {
+          const res = await fetch("/api/analytics/income");
+          const income = await res.json();
+
+          let html = "";
+          let idx = 0;
+          // Parse the nested structure from pandas groupby
+          const incomeData = Object.entries(income).sort((a, b) => {
+            const countA = a[1]["customer_lifetime_value"]?.["count"]?.[0] || 0;
+            const countB = b[1]["customer_lifetime_value"]?.["count"]?.[0] || 0;
+            return countB - countA;
+          });
+
+          incomeData.forEach(([bracket, data]) => {
+            if (idx < 5) {
+              const count =
+                data["customer_lifetime_value"]?.["count"]?.[0] || 0;
+              const percent = (
+                (count /
+                  incomeData.reduce(
+                    (sum, [_, d]) =>
+                      sum + (d["customer_lifetime_value"]?.["count"]?.[0] || 0),
+                    0,
+                  )) *
+                100
+              ).toFixed(1);
+              html += `
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">${bracket}</span>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-16 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                                        <div class="h-full bg-tertiary" style="width: ${percent}%"></div>
+                                    </div>
+                                    <span class="text-sm font-bold">${count}</span>
+                                </div>
+                            </div>
+                        `;
+              idx++;
+            }
+          });
+          document.getElementById("income-list").innerHTML =
+            html ||
+            '<p class="text-sm text-on-surface-variant">Loading income data...</p>';
+        } catch (error) {
+          console.error("Error loading income:", error);
+        }
+      }
+
+      async function loadTransactions() {
+        try {
+          // Load transaction summary
+          const metricsRes = await fetch("/api/analytics/transaction-metrics");
+          const metrics = await metricsRes.json();
+
+          document.getElementById("total-txns").textContent =
+            metrics.total_transactions.toLocaleString();
+          document.getElementById("total-volume").textContent =
+            "$" + (metrics.total_volume / 1000000).toFixed(2) + "M";
+          document.getElementById("avg-txn").textContent =
+            "$" + (metrics.avg_amount / 1000000).toFixed(1) + "M";
+          document.getElementById("max-txn").textContent =
+            "$" + (metrics.max_transaction / 1000000).toFixed(1) + "M";
+          document.getElementById("min-txn").textContent =
+            "$" + (metrics.min_transaction / 1000000).toFixed(1) + "M";
+
+          // Load transaction type summary
+          loadTransactionTypeSummary();
+
+          // Load transaction types
+          loadTransactionTypes();
+
+          // Load amount distribution
+          loadAmountDistribution();
+
+          // Load monthly trend
+          loadMonthlyTrend();
+        } catch (error) {
+          console.error("Error loading transactions:", error);
+        }
+      }
+
+      async function loadTransactionTypeSummary() {
+        try {
+          const res = await fetch("/api/analytics/transaction-type-summary");
+          const summary = await res.json();
+
+          let html = "";
+          
+          summary.forEach((item) => {
+            const colors = {
+              "Transfer": primaryColor,
+              "Payment": tertiaryColor,
+              "Deposit": secondaryColor,
+              "Withdrawal": errorColor
+            };
+            const color = colors[item.type] || primaryColor;
+            
+            html += `
+              <div class="flex items-center justify-between p-4 bg-surface-container-high rounded-lg hover:bg-surface-container transition-colors">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${color}"></div>
+                    <h5 class="font-bold text-on-surface">${item.type}</h5>
+                    <span class="text-xs font-bold text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">${item.percentage}%</span>
+                  </div>
+                  <div class="text-xs text-on-surface-variant">${item.count.toLocaleString()} transactions</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-bold text-on-surface">$${(item.volume / 1000000000).toFixed(2)}B</div>
+                  <div class="text-xs text-on-surface-variant">Avg: $${(item.avg_amount / 1000000).toFixed(1)}M</div>
+                </div>
+              </div>
+            `;
+          });
+          
+          document.getElementById("txn-type-summary").innerHTML = html;
+        } catch (error) {
+          console.error("Error loading transaction type summary:", error);
+          document.getElementById("txn-type-summary").innerHTML = '<p class="text-sm text-on-surface-variant">Error loading summary</p>';
+        }
+      }
+
+      async function loadTransactionTypes() {
+        try {
+          const res = await fetch("/api/analytics/transaction-types");
+          const types = await res.json();
+
+          const labels = Object.keys(types);
+          const counts = labels.map((label) => types[label]);
+
+          const ctx = document.getElementById("txnTypesChart").getContext("2d");
+          if (txnTypesChart) txnTypesChart.destroy();
+
+          txnTypesChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  data: counts,
+                  backgroundColor: [
+                    primaryColor,
+                    tertiaryColor,
+                    secondaryColor,
+                    errorColor,
+                  ],
+                  borderColor: "#ffffff",
+                  borderWidth: 2,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { position: "bottom" },
+              },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading transaction types:", error);
+        }
+      }
+
+      async function loadAmountDistribution() {
+        try {
+          const res = await fetch("/api/analytics/transaction-amount-distribution");
+          const dist = await res.json();
+
+          const labels = Object.keys(dist);
+          const counts = labels.map((label) => dist[label]);
+
+          const ctx = document.getElementById("amountDistChart").getContext("2d");
+          if (amountDistChart) amountDistChart.destroy();
+
+          amountDistChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Number of Transactions",
+                  data: counts,
+                  backgroundColor: primaryColor,
+                  borderRadius: 4,
+                },
+              ],
+            },
+            options: {
+              indexAxis: "x",
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: { legend: { display: false } },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading amount distribution:", error);
+        }
+      }
+
+      async function loadMonthlyTrend() {
+        try {
+          const res = await fetch("/api/analytics/monthly-transaction-trend");
+          const trend = await res.json();
+
+          if (!trend || trend.length === 0) {
+            console.log("No trend data available");
+            return;
+          }
+
+          const labels = trend.map((item) => item.month);
+          const volumes = trend.map((item) => item.volume / 1000000); // Convert to millions
+          const counts = trend.map((item) => item.count);
+
+          const ctx = document.getElementById("monthlyTrendChart").getContext("2d");
+          if (monthlyTrendChart) monthlyTrendChart.destroy();
+
+          monthlyTrendChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Transaction Volume ($M)",
+                  data: volumes,
+                  backgroundColor: "rgba(0, 72, 141, 0.1)",
+                  borderColor: primaryColor,
+                  borderWidth: 2,
+                  fill: true,
+                  tension: 0.4,
+                  yAxisID: "y",
+                },
+                {
+                  label: "Transaction Count",
+                  data: counts,
+                  backgroundColor: "rgba(84, 181, 18, 0.1)",
+                  borderColor: tertiaryColor,
+                  borderWidth: 2,
+                  fill: true,
+                  tension: 0.4,
+                  yAxisID: "y1",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              interaction: {
+                mode: "index",
+                intersect: false,
+              },
+              scales: {
+                y: {
+                  type: "linear",
+                  display: true,
+                  position: "left",
+                  title: {
+                    display: true,
+                    text: "Volume ($M)",
+                  },
+                },
+                y1: {
+                  type: "linear",
+                  display: true,
+                  position: "right",
+                  title: {
+                    display: true,
+                    text: "Count",
+                  },
+                  grid: {
+                    drawOnChartArea: false,
+                  },
+                },
+              },
+              plugins: {
+                legend: { position: "bottom" },
+              },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading monthly trend:", error);
+        }
+      }
+
+      async function loadInsights() {
+        try {
+          // Load satisfaction vs transactions
+          loadSatisfactionAnalysis();
+          
+          // Load segment analysis
+          loadSegmentAnalysis();
+          
+          // Load CLV analysis
+          loadCLVAnalysis();
+          
+          // Load top customers
+          loadTopCustomers();
+        } catch (error) {
+          console.error("Error loading insights:", error);
+        }
+      }
+
+      async function loadSatisfactionAnalysis() {
+        try {
+          const res = await fetch("/api/analytics/customer-satisfaction-vs-transactions");
+          const data = await res.json();
+          
+          document.getElementById("high-sat-count").textContent = data.high_satisfaction.count;
+          document.getElementById("high-sat-volume").textContent = "$" + (data.high_satisfaction.avg_volume / 1000000).toFixed(1) + "M";
+          
+          document.getElementById("med-sat-count").textContent = data.medium_satisfaction.count;
+          document.getElementById("med-sat-volume").textContent = "$" + (data.medium_satisfaction.avg_volume / 1000000).toFixed(1) + "M";
+          
+          document.getElementById("low-sat-count").textContent = data.low_satisfaction.count;
+          document.getElementById("low-sat-volume").textContent = "$" + (data.low_satisfaction.avg_volume / 1000000).toFixed(1) + "M";
+        } catch (error) {
+          console.error("Error loading satisfaction analysis:", error);
+        }
+      }
+
+      async function loadSegmentAnalysis() {
+        try {
+          const res = await fetch("/api/analytics/customer-segment-transaction-analysis");
+          const data = await res.json();
+          
+          let html = "";
+          for (const [segment, stats] of Object.entries(data)) {
+            html += `
+              <div class="flex items-center justify-between p-4 bg-surface-container-high rounded-lg">
+                <div>
+                  <h5 class="font-bold text-on-surface mb-1">${segment}</h5>
+                  <p class="text-xs text-on-surface-variant">${stats.customer_count} customers</p>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-bold text-on-surface">$${(stats.avg_volume / 1000000).toFixed(1)}M avg</div>
+                  <div class="text-xs text-on-surface-variant">${Math.round(stats.avg_transaction_count)} txns/customer</div>
+                </div>
+              </div>
+            `;
+          }
+          document.getElementById("segment-analysis").innerHTML = html;
+        } catch (error) {
+          console.error("Error loading segment analysis:", error);
+        }
+      }
+
+      async function loadCLVAnalysis() {
+        try {
+          const res = await fetch("/api/analytics/clv-vs-transaction-volume");
+          const data = await res.json();
+          
+          // Platinum
+          document.getElementById("platinum-count").textContent = data.platinum.count;
+          document.getElementById("platinum-txns").textContent = Math.round(data.platinum.avg_txn_count);
+          document.getElementById("platinum-volume").textContent = "$" + (data.platinum.avg_volume / 1000000).toFixed(1) + "M";
+          
+          // Gold
+          document.getElementById("gold-count").textContent = data.gold.count;
+          document.getElementById("gold-txns").textContent = Math.round(data.gold.avg_txn_count);
+          document.getElementById("gold-volume").textContent = "$" + (data.gold.avg_volume / 1000000).toFixed(1) + "M";
+          
+          // Bronze
+          document.getElementById("bronze-count").textContent = data.bronze.count;
+          document.getElementById("bronze-txns").textContent = Math.round(data.bronze.avg_txn_count);
+          document.getElementById("bronze-volume").textContent = "$" + (data.bronze.avg_volume / 1000000).toFixed(1) + "M";
+        } catch (error) {
+          console.error("Error loading CLV analysis:", error);
+        }
+      }
+
+      async function loadTopCustomers() {
+        try {
+          const res = await fetch("/api/analytics/top-customers-by-transactions");
+          const customers = await res.json();
+          
+          let html = "";
+          customers.slice(0, 10).forEach((customer, idx) => {
+            const colors = {
+              "Gold": primaryColor,
+              "Platinum": secondaryColor,
+              "Bronze": tertiaryColor,
+              "occasional": "#999"
+            };
+            const color = colors[customer.segment] || "#999";
+            
+            html += `
+              <div class="flex items-center justify-between p-4 bg-surface-container-high rounded-lg hover:bg-surface-container transition-colors">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-bold text-on-surface-variant">Top ${idx + 1}</span>
+                    <span class="text-sm font-bold text-on-surface">Customer ${customer.customer_id}</span>
+                    <span class="text-xs font-bold px-2 py-0.5 rounded" style="background-color: ${color}; color: white;">${customer.segment}</span>
+                  </div>
+                  <div class="text-xs text-on-surface-variant">${customer.transaction_count} transactions | Satisfaction: ${customer.satisfaction_score.toFixed(1)}/10</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm font-bold text-on-surface">$${(customer.total_volume / 1000000).toFixed(1)}M</div>
+                  <div class="text-xs text-on-surface-variant">Avg: $${(customer.avg_amount / 1000000).toFixed(1)}M</div>
+                </div>
+              </div>
+            `;
+          });
+          document.getElementById("top-customers").innerHTML = html;
+        } catch (error) {
+          console.error("Error loading top customers:", error);
+        }
+      }
+
+      // Load dashboard on page load
+      window.addEventListener("load", loadDashboard);
+    </script>
+  </body>
+</html>

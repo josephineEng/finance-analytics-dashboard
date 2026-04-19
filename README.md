@@ -1,121 +1,170 @@
-# Finance Analytics Dashboard
+# Precision Analytics - Finance Dashboard
 
-A comprehensive financial analytics dashboard built with Python, SQL, and Streamlit. Designed to analyze investment portfolios, track performance metrics, and visualize financial trends.
+A Python-based data analytics dashboard built with Flask that visualizes customer and transaction data using your custom HTML design.
 
 ## Features
 
-- **Portfolio Overview**: Track total assets, returns, and performance metrics
-- **Performance Analysis**: Visualize historical returns and asset allocation
-- **Comparative Analytics**: Compare performance across different time periods
-- **Detailed Reports**: View transaction history and individual holdings
-- **Interactive Visualizations**: Dynamic charts and real-time metrics
-
-## Tech Stack
-
-- **Backend**: Python (Pandas, NumPy, SQLite)
-- **Database**: SQLite (easily upgradeable to PostgreSQL)
-- **Dashboard**: Streamlit
-- **Data Processing**: Python scripts for ETL and data validation
+- **Executive Summary**: Overview of key metrics including total customers, satisfaction scores, NPS, and churn risk
+- **Customer Analysis**: Demographics breakdown, gender distribution, education levels, and marital status
+- **Churn Risk Analysis**: Identify high-risk customers and analyze churn patterns by segment
+- **Interactive Visualizations**: Real-time charts powered by Chart.js
+- **RESTful API**: Backend API endpoints for data access and analytics
+- **Responsive Design**: Mobile-friendly Material Design UI
 
 ## Project Structure
 
 ```
-finance-analytics-dashboard/
+try2/
+├── app/
+│   └── app.py              # Flask application and API endpoints
+├── templates/
+│   └── dashboard.html      # Interactive dashboard UI
 ├── data/
-│   ├── sample_data.csv          # Sample financial data
-│   └── init_database.sql        # Database initialization script
-├── src/
-│   ├── database.py              # Database connection and queries
-│   ├── data_processor.py        # ETL and data processing
-│   └── utils.py                 # Utility functions
-├── dashboard.py                 # Main Streamlit dashboard
-├── requirements.txt             # Python dependencies
-├── .gitignore
-└── README.md
+│   ├── customer_data.csv   # Customer dataset
+│   └── transactions_data.csv # Transaction dataset
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
 ```
 
-## Installation
+## Installation & Setup
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/finance-analytics-dashboard.git
-cd finance-analytics-dashboard
-```
-
-2. Create a virtual environment:
+### 1. Install Dependencies
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+# Navigate to the project directory
+cd c:\Users\user\Desktop\try2
 
-3. Install dependencies:
-
-```bash
+# Install Python packages
 pip install -r requirements.txt
 ```
 
-4. Initialize the database:
+### 2. Run the Application
 
 ```bash
-python src/database.py
+# From the project root directory
+python app/app.py
 ```
 
-## Usage
+The dashboard will be available at: **http://localhost:5000**
 
-Run the dashboard:
+## Available API Endpoints
+
+### Dashboard Data
+
+- `GET /api/dashboard-summary` - Get summary metrics
+- `GET /api/customers` - Get customers with pagination
+- `GET /api/customers?page=1&per_page=10&segment=Gold` - Filter by segment
+
+### Analytics
+
+- `GET /api/analytics/segments` - Customer segmentation analysis
+- `GET /api/analytics/income` - Income bracket analytics
+- `GET /api/analytics/locations` - Top location analysis
+- `GET /api/analytics/nps` - NPS distribution
+- `GET /api/analytics/churn` - Churn risk analytics
+- `GET /api/analytics/demographics` - Demographic breakdown
+
+## Data Sources
+
+- **customer_data.csv**: Contains ~10,000 customer records with demographics, financial metrics, satisfaction scores, NPS, and churn probability
+- **transactions_data.csv**: Contains transaction details and patterns
+
+## Dashboard Sections
+
+### Executive Summary
+
+- Key performance indicators (KPIs)
+- Customer segmentation overview
+- Churn risk distribution
+- Top locations and income brackets
+
+### Customer Analysis
+
+- Age statistics and distribution
+- Gender and education breakdown
+- Marital status analysis
+- Interactive demographic charts
+
+### Churn Risk
+
+- High/Medium/Low risk segments
+- Risk distribution by customer segment
+- Actionable churn insights
+
+### Demographics
+
+- Comprehensive demographic breakdown
+- Education and gender distribution patterns
+- Visualizations for all demographic categories
+
+## Technologies Used
+
+- **Backend**: Flask (Python)
+- **Frontend**: HTML, Tailwind CSS, Chart.js
+- **Data Processing**: Pandas
+- **Design System**: Material Design 3
+
+## Customization
+
+### Add New Analytics
+
+Edit `app/app.py` and create new API endpoints:
+
+```python
+@app.route('/api/analytics/custom')
+def custom_analytics():
+    # Your analytics logic
+    return jsonify(result)
+```
+
+### Modify Dashboard Layout
+
+Edit `templates/dashboard.html` to customize charts, colors, and layout.
+
+### Update Colors
+
+Colors are defined in the Tailwind configuration in the HTML header - modify the color palette as needed.
+
+## Troubleshooting
+
+### Port 5000 in use
+
+Change the port in `app.py`:
+
+```python
+app.run(debug=True, port=5001)  # Use a different port
+```
+
+### Data loading errors
+
+Ensure CSV files are in the `data/` folder and properly formatted.
+
+### Missing dependencies
+
+Reinstall requirements:
 
 ```bash
-streamlit run dashboard.py
+pip install -r requirements.txt --force-reinstall
 ```
-
-The dashboard will open in your browser at `http://localhost:8501`
-
-## Key Metrics
-
-- **Total Portfolio Value**: Real-time portfolio valuation
-- **Year-to-Date Return**: YTD performance percentage
-- **Total Return**: Cumulative return since inception
-- **Daily Performance**: Day-over-day P&L
-- **Asset Allocation**: Breakdown by asset class
-
-## Data Schema
-
-### Portfolios Table
-
-- portfolio_id, name, creation_date, total_value
-
-### Holdings Table
-
-- holding_id, portfolio_id, symbol, quantity, purchase_price, current_price, sector
-
-### Transactions Table
-
-- transaction_id, portfolio_id, symbol, transaction_type, quantity, price, transaction_date
-
-### Price History Table
-
-- price_id, symbol, date, close_price, open_price, high, low, volume
 
 ## Future Enhancements
 
-- [ ] Real-time data integration with financial APIs
-- [ ] Risk analysis and portfolio optimization
-- [ ] Backtesting functionality
-- [ ] Machine learning models for price prediction
-- [ ] Multi-user support with authentication
-- [ ] Export reports to PDF
-- [ ] Integration with tax calculation
+- Add predictive modeling for churn
+- Implement time-series analysis
+- Add export functionality (PDF, Excel)
+- Create custom report builder
+- Add real-time data streaming
+- Implement data caching for performance
+- Add user authentication
 
-## Author
+## Support
 
-Your Name
+For issues or questions, refer to:
+
+- Flask documentation: https://flask.palletsprojects.com/
+- Pandas documentation: https://pandas.pydata.org/
+- Chart.js documentation: https://www.chartjs.org/
 
 ## License
 
-MIT License - feel free to use this for your portfolio
-
-## Contact
-
-For questions or suggestions, reach out via email or LinkedIn.
+This project is provided as-is for data analytics purposes.
