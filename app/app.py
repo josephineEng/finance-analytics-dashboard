@@ -4,10 +4,13 @@ import json
 from datetime import datetime
 import os
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
+# Get the project root directory (parent of the app directory)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATE_DIR = os.path.join(PROJECT_ROOT, 'templates')
+STATIC_DIR = os.path.join(PROJECT_ROOT, 'static')
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 
-# Load data
-DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
+app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 
 def load_data():
     """Load CSV data"""
